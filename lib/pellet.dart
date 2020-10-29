@@ -20,23 +20,16 @@ class pelletState extends State<pellet> {
 
   Future<String> consultar() async {
     print("lanza la consulta");
-    var respuesta = await http.get("http://192.168.42.108:8008/hello/");
-
+    var respuesta = await http.get("http://192.168.0.156:8008/hello/");
     // sample info available in response
-    int statusCode = respuesta.statusCode;
-    Map<String, String> headers = respuesta.headers;
-    String contentType = headers['content-type'];
     String js = respuesta.body;
-    print(statusCode.toString() + "\n" + headers.toString() + "\n" +
-        js.toString());
-    print(respuesta.toString());
     return js;
   }
 
 
   pelletState(){
     print("constructor");
-    var s = consultar().then((x) {
+    consultar().then((x) {
       setState(() {
         objeto = json.decode(x);
       });
@@ -77,8 +70,9 @@ class pelletState extends State<pellet> {
                           ranges: <GaugeRange>[
                             GaugeRange(startValue: 0, endValue: 15, color:Colors.blue),
                             GaugeRange(startValue: 15,endValue: 30,color: Colors.green),
-                            GaugeRange(startValue: 30,endValue: 35,color: Colors.orange),
-                            GaugeRange(startValue: 35,endValue: 100,color: Colors.red)],
+                            GaugeRange(startValue: 25,endValue: 30,color: Colors.yellow),
+                            GaugeRange(startValue: 30,endValue: 40,color: Colors.orange),
+                            if(double.parse(objeto['tempMax'].toString())>40) GaugeRange(startValue: 40,endValue: 100,color: Colors.red)],
                           pointers: <GaugePointer>[
                             NeedlePointer(value: double.parse(objeto['estado']['temp'].toString()))],
                           annotations: <GaugeAnnotation>[
@@ -90,10 +84,6 @@ class pelletState extends State<pellet> {
               ]
 
           ),
-
-
-
-
         ]
     );
   }

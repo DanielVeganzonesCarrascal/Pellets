@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'pellet.dart';
-import 'package:syncfusion_flutter_gauges/gauges.dart';
+
 
 void main() => runApp(MyApp());
 class MyApp extends StatelessWidget {
