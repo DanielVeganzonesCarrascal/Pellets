@@ -17,25 +17,29 @@ class pelletState extends State<pellet> {
 
   @override
   var objeto;
-
-  Future<String> consultar() async {
-    print("lanza la consulta");
-    var respuesta = await http.get("http://192.168.0.156:8008/hello/");
-    // sample info available in response
-    String js = respuesta.body;
-    return js;
-  }
-
+  var tempMax;
+  var tempIdeal;
+  var tempActual;
 
   pelletState(){
     print("constructor");
     consultar().then((x) {
       setState(() {
         objeto = json.decode(x);
+        tempMax=double.parse(objeto['tempMax'].toString());
+        tempIdeal=double.parse(objeto['tempIdeal'].toString());
+        tempActual=double.parse(objeto['estado']['temp'].toString());
       });
     });
   }
 
+  Future<String> consultar() async {
+    print("lanza la consulta");
+    var respuesta = await http.get("http://192.168.42.108:8008/hello/");
+    // sample info available in response
+    String js = respuesta.body;
+    return js;
+  }
 
 
   Widget build(BuildContext context) {
@@ -56,7 +60,7 @@ class pelletState extends State<pellet> {
 
           const Divider(
             color: Colors.white10,
-            height:20,
+            height:70,
             thickness:5,
             indent:20,
             endIndent:0,
@@ -66,24 +70,71 @@ class pelletState extends State<pellet> {
               children: [
                 SfRadialGauge(
                     axes: <RadialAxis>[
-                      RadialAxis(minimum: 0, maximum: double.parse(objeto['tempMax'].toString()),
+                      RadialAxis(minimum: 0, maximum: tempMax,
                           ranges: <GaugeRange>[
-                            GaugeRange(startValue: 0, endValue: 15, color:Colors.blue),
-                            GaugeRange(startValue: 15,endValue: 30,color: Colors.green),
-                            GaugeRange(startValue: 25,endValue: 30,color: Colors.yellow),
-                            GaugeRange(startValue: 30,endValue: 40,color: Colors.orange),
-                            if(double.parse(objeto['tempMax'].toString())>40) GaugeRange(startValue: 40,endValue: 100,color: Colors.red)],
+                            GaugeRange(startValue: 0, endValue: tempIdeal-5.0, color:Colors.blue),
+                            GaugeRange(startValue: tempIdeal-5.0,endValue: tempIdeal+5.0,color: Colors.green),
+                            GaugeRange(startValue: tempIdeal+5.0,endValue: 35,color: Colors.yellow),
+                            GaugeRange(startValue: 35,endValue: 40,color: Colors.orange),
+                            if(tempMax>40) GaugeRange(startValue: 40,endValue: 100,color: Colors.red)],
                           pointers: <GaugePointer>[
-                            NeedlePointer(value: double.parse(objeto['estado']['temp'].toString()))],
+                            NeedlePointer(value: tempActual)],
                           annotations: <GaugeAnnotation>[
                             GaugeAnnotation(widget: Container(child:
-                            Text(objeto['estado']['temp'].toString(),style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold))),
+                            Text(tempActual.toString(),style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold))),
                                 angle: 90, positionFactor: 0.5
                             )]
-                      )])
-              ]
+                      )]),
 
+              ]
           ),
+
+          const Divider(
+            color: Colors.white10,
+            height:70,
+            thickness:5,
+            indent:20,
+            endIndent:0,
+          ),
+
+
+          Row(mainAxisAlignment: MainAxisAlignment.center,
+            children:[
+              SliderTheme(
+                  data: SliderTheme.of(context).copyWith(
+                    activeTrackColor: Colors.red[700],
+                    inactiveTrackColor: Colors.red[100],
+                    trackShape: RoundedRectSliderTrackShape(),
+                    trackHeight: 4.0,
+                    thumbShape: RoundSliderThumbShape(enabledThumbRadius: 12.0),
+                    thumbColor: Colors.redAccent,
+                    overlayColor: Colors.red.withAlpha(32),
+                    overlayShape: RoundSliderOverlayShape(overlayRadius: 28.0),
+                    tickMarkShape: RoundSliderTickMarkShape(),
+                    activeTickMarkColor: Colors.red[700],
+                    inactiveTickMarkColor: Colors.red[100],
+                    valueIndicatorShape: PaddleSliderValueIndicatorShape(),
+                    valueIndicatorColor: Colors.redAccent,
+                    valueIndicatorTextStyle: TextStyle(
+                      color: Colors.white,
+                    ),
+                  ),
+
+                    child: Slider(
+                            value: tempActual,
+                            min: 0,
+                            max: tempMax,
+                            divisions: 120,
+                            label: tempActual.round().toString(),
+                            onChanged: (double value) {
+                            setState(() {
+                            tempActual = value;
+              });
+            },
+    )
+              )
+              ]
+          )
         ]
     );
   }
