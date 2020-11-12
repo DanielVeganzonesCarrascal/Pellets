@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
+import 'package:flutter/services.dart';
 
 class pellet extends StatefulWidget{
   @override
@@ -21,6 +22,10 @@ class pelletState extends State<pellet> {
   var tempIdeal;
   var tempActual;
   var actual;
+  var speed;
+  var personalizar=false;
+  var programa_actual;
+  var velocidadList="Velocidad";
 
   pelletState(){
     print("constructor");
@@ -30,13 +35,15 @@ class pelletState extends State<pellet> {
         tempMax=double.parse(objeto['tempMax'].toString());
         tempIdeal=double.parse(objeto['tempIdeal'].toString());
         tempActual=double.parse(objeto['estado']['temp'].toString());
+        speed=objeto['estado']['velocidad'].toString();
+        programa_actual=objeto['estado']['programa'].toString();
       });
     });
   }
 
   Future<String> consultar() async {
     print("lanza la consulta");
-    var respuesta = await http.get("http://192.168.42.108:8008/hello/");
+    var respuesta = await http.get("http://192.168.0.16:8008/hello/");
     // sample info available in response
     String js = respuesta.body;
     return js;
@@ -61,7 +68,7 @@ class pelletState extends State<pellet> {
 
           const Divider(
             color: Colors.white10,
-            height:70,
+            height:30,
             thickness:5,
             indent:20,
             endIndent:0,
@@ -90,17 +97,10 @@ class pelletState extends State<pellet> {
               ]
           ),
 
-          const Divider(
-            color: Colors.white10,
-            height:10,
-            thickness:5,
-            indent:20,
-            endIndent:0,
-          ),
 
 
           Row(mainAxisAlignment: MainAxisAlignment.center,
-            children:[
+            children:[ if(personalizar)
               SliderTheme(
                   data: SliderTheme.of(context).copyWith(
                     activeTrackColor: Colors.red[700],
@@ -138,26 +138,113 @@ class pelletState extends State<pellet> {
               ]
           ),
 
-          const Divider(
-            color: Colors.white10,
-            height:10,
-            thickness:5,
-            indent:20,
-            endIndent:0,
-          ),
 
           Row(mainAxisAlignment: MainAxisAlignment.center,
             children: [
+            Image.asset(
+              'images/38-512.png',
+              width: 70,
+              height: 72,
+            ),
+              Text("  "),
+              if (!personalizar)
+                    Text(speed,
+                  style: TextStyle(fontWeight: FontWeight.bold,
+                      fontSize:50)),
+              if(personalizar)
+                    new DropdownButton<String>(
+                      hint: Text(velocidadList),
+                      items: <String>['1', '2', '3'].map((String value) {
+                       return new DropdownMenuItem<String>(
+                       value: value,
+                        child: new Text(value),
+                      );
+                      }).toList(),
+                      onChanged:(String velocidad) {
+                        setState(() {
+                          velocidadList=velocidad;
+                          objeto['estado']['velocidad']=velocidad;
+                          speed=velocidad;
+                        });
+                      },
+                    )
+            ]
+          ),
+
+
+
+          Row(mainAxisAlignment: MainAxisAlignment.center,
+            children: [ if(personalizar)
               FlatButton(onPressed: () {
                 setState(() {
                   objeto['estado']['temp']=tempActual;
+                  objeto['estado']['programa']="Personalizado";
                   actual = json.encode(objeto);
-                  http.get("http://192.168.42.108:8008/set/"+ actual + "/");
+                  http.get("http://192.168.0.16:8008/set/"+ actual + "/");
+                  personalizar=!personalizar;
+                  programa_actual="Personalizado";
                 });
               },
                 child: Text(
                   "Confirmar",
                 ),
+              )
+            ]
+          ),
+
+
+          const Divider(
+            color: Colors.white10,
+            height:30,
+            thickness:5,
+            indent:20,
+            endIndent:0,
+          ),
+
+
+          Row( mainAxisAlignment: MainAxisAlignment.center,
+            children:[ if(!personalizar)
+              new DropdownButton<String>(
+                hint: Text(programa_actual),
+                items: <String>['Fresco', 'Templado', 'Mucho calor', 'Personalizado'].map((String value) {
+                  return new DropdownMenuItem<String>(
+                    value: value,
+                    child: new Text(value),
+                  );
+                }).toList(),
+                onChanged: (String programa) {
+                  setState(() {
+                    if (programa=="Personalizado") personalizar=!personalizar;
+                    else if (programa=="Fresco") {
+                      objeto['estado']['temp']=15;
+                      tempActual=15.0;
+                      objeto['estado']['velocidad']=1;
+                      objeto['estado']['programa']="Fresco";
+                      programa_actual="Fresco";
+                      speed="1";
+                      actual = json.encode(objeto);
+                      http.get("http://192.168.0.16:8008/set/"+ actual + "/");}
+                    else if (programa=="Templado") {
+                      objeto['estado']['temp']=23;
+                      tempActual=23.0;
+                      objeto['estado']['velocidad']=2;
+                      speed="2";
+                      objeto['estado']['programa']="Templado";
+                      programa_actual="Templado";
+                      actual = json.encode(objeto);
+                      http.get("http://192.168.0.16:8008/set/"+ actual + "/");}
+                    else if (programa=="Mucho calor") {
+                      objeto['estado']['temp']=30;
+                      tempActual=30.0;
+                      objeto['estado']['velocidad']=3;
+                      speed="3";
+                      objeto['estado']['programa']="Mucho calor";
+                      programa_actual="Mucho calor";
+                      actual = json.encode(objeto);
+                      http.get("http://192.168.0.16:8008/set/"+ actual + "/");
+                    }
+                  });
+                },
               )
             ]
           )
