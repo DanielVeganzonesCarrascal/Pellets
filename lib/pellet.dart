@@ -20,6 +20,7 @@ class pelletState extends State<pellet> {
   var tempMax;
   var tempIdeal;
   var tempActual;
+  var actual;
 
   pelletState(){
     print("constructor");
@@ -35,7 +36,7 @@ class pelletState extends State<pellet> {
 
   Future<String> consultar() async {
     print("lanza la consulta");
-    var respuesta = await http.get("http://192.168.0.16:8008/hello/");
+    var respuesta = await http.get("http://192.168.42.108:8008/hello/");
     // sample info available in response
     String js = respuesta.body;
     return js;
@@ -135,6 +136,30 @@ class pelletState extends State<pellet> {
                     )
                  )
               ]
+          ),
+
+          const Divider(
+            color: Colors.white10,
+            height:10,
+            thickness:5,
+            indent:20,
+            endIndent:0,
+          ),
+
+          Row(mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              FlatButton(onPressed: () {
+                setState(() {
+                  objeto['estado']['temp']=tempActual;
+                  actual = json.encode(objeto);
+                  http.get("http://192.168.42.108:8008/set/"+ actual + "/");
+                });
+              },
+                child: Text(
+                  "Confirmar",
+                ),
+              )
+            ]
           )
         ]
     );
